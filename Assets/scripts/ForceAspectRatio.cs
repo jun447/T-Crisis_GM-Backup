@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 public class ForceAspectRatio : MonoBehaviour
 {
     public float targetAspectRatio = 16f / 9f;
-    Camera camera;
+    public new Camera camera;
 
     private CommandBuffer clearBuffer;
 

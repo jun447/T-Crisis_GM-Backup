@@ -8,11 +8,15 @@ public class AudioSceneFading : MonoBehaviour
     public static float MusicVolume = 0.5f;
     public static float EffectsVolume = 0.5f;
 
-    //int MusicPlayer
+    
+    public AudioClip[] musicClips;
+    public AudioClip[] sfxClips;
+
+    private AudioSource musicAudioSource;
+    private AudioSource sfxAudioSource;
+
     public static int MusicTotal = 2;
     public static int MusicCurrentlyPlaying = -1;
-
-    //int EffectPlayer = []
     public static int EffectsTotal = 2;
 
     public const int FadeIn            = 0;
@@ -22,43 +26,61 @@ public class AudioSceneFading : MonoBehaviour
 
     public static float ScreenFadeAlpha = 1.0f;
 
-    public const int SceneClickToContinue      = 0;
-    public const int SceneUnity                = 1;
-    public const int SceneTitle                = 2;
+    public const int SceneClickToContinue     = 0;
+    public const int SceneUnity               = 1;
+    public const int SceneTitle               = 2;
     public static int CurrentSceneToDisplay = SceneClickToContinue;
     public static int NextSceneToDisplay = SceneUnity;
 
     public static float ScreenDisplayTimer = 0.0f;
-
     public static long LastTicks = DateTime.Now.Ticks;
 
     void Awake()
     {
         if (Instance != null) {
-            Debug.LogError("There is more than one instance!");
+            Destroy(gameObject);
             return;
         }
 
         Instance = this;
+        DontDestroyOnLoad(gameObject); 
+        musicAudioSource = gameObject.AddComponent<AudioSource>();
+        sfxAudioSource = gameObject.AddComponent<AudioSource>();
+        musicAudioSource.volume = MusicVolume;
+        sfxAudioSource.volume = EffectsVolume;
     }
 
     void Update()
     {
-        
+        if (musicAudioSource != null) musicAudioSource.volume = MusicVolume;
+        if (sfxAudioSource != null) sfxAudioSource.volume = EffectsVolume;
     }
 
-    void OnGui()
+    public static void PlayMusic(int musicToPlay, int loop)
     {
-        // common GUI code goes here
-    }
+        if (Instance == null) return;
+        if (musicToPlay < 0 || musicToPlay >= Instance.musicClips.Length) return;
 
-    public static void PlayMusic(int musicToPlay, int loop) // loop of: "-1" means loop forever
-    {
-
+        MusicCurrentlyPlaying = musicToPlay;
+        Instance.musicAudioSource.clip = Instance.musicClips[musicToPlay];
+        Instance.musicAudioSource.loop = (loop == -1);
+        Instance.musicAudioSource.Play();
     }
 
     public static void PlaySoundEffect(int soundEffectToPlay, int loop)
     {
+        if (Instance == null) return;
+        if (soundEffectToPlay < 0 || soundEffectToPlay >= Instance.sfxClips.Length) return;
 
+        if (loop == -1)
+        {
+            Instance.sfxAudioSource.clip = Instance.sfxClips[soundEffectToPlay];
+            Instance.sfxAudioSource.loop = true;
+            Instance.sfxAudioSource.Play();
+        }
+        else
+        {
+            Instance.sfxAudioSource.PlayOneShot(Instance.sfxClips[soundEffectToPlay]);
+        }
     }
 }
