@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 
 public class AudioSceneFading : MonoBehaviour
 {
@@ -15,9 +14,8 @@ public class AudioSceneFading : MonoBehaviour
     private AudioSource musicAudioSource;
     private AudioSource sfxAudioSource;
 
-    public static int MusicTotal = 2;
     public static int MusicCurrentlyPlaying = -1;
-    public static int EffectsTotal = 2;
+    private const int LoopForever = -1;
 
     public const int FadeIn            = 0;
     public const int FadeOut           = 1;
@@ -33,7 +31,9 @@ public class AudioSceneFading : MonoBehaviour
     public static int NextSceneToDisplay = SceneUnity;
 
     public static float ScreenDisplayTimer = 0.0f;
-    public static long LastTicks = DateTime.Now.Ticks;
+
+    private float lastMusicVolume;
+    private float lastEffectsVolume;
 
     void Awake()
     {
@@ -46,24 +46,44 @@ public class AudioSceneFading : MonoBehaviour
         DontDestroyOnLoad(gameObject); 
         musicAudioSource = gameObject.AddComponent<AudioSource>();
         sfxAudioSource = gameObject.AddComponent<AudioSource>();
+        if (musicAudioSource == null || sfxAudioSource == null)
+        {
+            Debug.LogError("AudioSceneFading: Failed to create AudioSource components.");
+            enabled = false;
+            return;
+        }
         musicAudioSource.volume = MusicVolume;
         sfxAudioSource.volume = EffectsVolume;
+        lastMusicVolume = MusicVolume;
+        lastEffectsVolume = EffectsVolume;
     }
 
     void Update()
     {
-        if (musicAudioSource != null) musicAudioSource.volume = MusicVolume;
-        if (sfxAudioSource != null) sfxAudioSource.volume = EffectsVolume;
+        if (musicAudioSource != null && !Mathf.Approximately(lastMusicVolume, MusicVolume))
+        {
+            musicAudioSource.volume = MusicVolume;
+            lastMusicVolume = MusicVolume;
+        }
+
+        if (sfxAudioSource != null && !Mathf.Approximately(lastEffectsVolume, EffectsVolume))
+        {
+            sfxAudioSource.volume = EffectsVolume;
+            lastEffectsVolume = EffectsVolume;
+        }
     }
 
     public static void PlayMusic(int musicToPlay, int loop)
     {
         if (Instance == null) return;
+        if (Instance.musicAudioSource == null) return;
+        if (Instance.musicClips == null || Instance.musicClips.Length == 0) return;
         if (musicToPlay < 0 || musicToPlay >= Instance.musicClips.Length) return;
+        if (Instance.musicClips[musicToPlay] == null) return;
 
         MusicCurrentlyPlaying = musicToPlay;
         Instance.musicAudioSource.clip = Instance.musicClips[musicToPlay];
-        Instance.musicAudioSource.loop = (loop == -1);
+        Instance.musicAudioSource.loop = (loop == LoopForever);
         Instance.musicAudioSource.volume = MusicVolume;
         Instance.musicAudioSource.Play();
     }
@@ -71,11 +91,14 @@ public class AudioSceneFading : MonoBehaviour
     public static void PlaySoundEffect(int soundEffectToPlay, int loop)
     {
         if (Instance == null) return;
+        if (Instance.sfxAudioSource == null) return;
+        if (Instance.sfxClips == null || Instance.sfxClips.Length == 0) return;
         if (soundEffectToPlay < 0 || soundEffectToPlay >= Instance.sfxClips.Length) return;
+        if (Instance.sfxClips[soundEffectToPlay] == null) return;
 
         Instance.sfxAudioSource.volume = EffectsVolume;
 
-        if (loop == -1)
+        if (loop == LoopForever)
         {
             Instance.sfxAudioSource.clip = Instance.sfxClips[soundEffectToPlay];
             Instance.sfxAudioSource.loop = true;

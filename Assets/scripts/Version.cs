@@ -7,11 +7,12 @@ public class Version : MonoBehaviour
 
     void Start()
     {
+        if (myTextElement == null)
+        {
+            Debug.LogError("Version: Missing TMP_Text reference.");
+            enabled = false;
+            return;
+        }
         myTextElement.SetText(Application.unityVersion);
-    }
-
-    void Update()
-    {
-        
     }
 }

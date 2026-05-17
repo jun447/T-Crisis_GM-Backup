@@ -1,21 +1,31 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System;
 using System.Collections;
 using UnityEngine.InputSystem.EnhancedTouch;
 using ETouch = UnityEngine.InputSystem.EnhancedTouch;
 
 public class Continue : MonoBehaviour
 {
+    private const float UnitySceneWaitSeconds = 3.0f;
+    private Coroutine waitCoroutine;
+
     private void OnEnable() => EnhancedTouchSupport.Enable();
-    private void OnDisable() => EnhancedTouchSupport.Disable();
+    private void OnDisable()
+    {
+        EnhancedTouchSupport.Disable();
+        if (waitCoroutine != null)
+        {
+            StopCoroutine(waitCoroutine);
+            waitCoroutine = null;
+        }
+    }
 
     void Start()
     {
         if (AudioSceneFading.CurrentSceneToDisplay == AudioSceneFading.SceneUnity)
         {
-            AudioSceneFading.ScreenDisplayTimer = 3.0f;
-            StartCoroutine(WaitAndLoadScene());
+            AudioSceneFading.ScreenDisplayTimer = UnitySceneWaitSeconds;
+            waitCoroutine = StartCoroutine(WaitAndLoadScene());
         }
     }
 
@@ -23,8 +33,9 @@ public class Continue : MonoBehaviour
     {
         yield return new WaitForSeconds(AudioSceneFading.ScreenDisplayTimer);
 
-  	    AudioSceneFading.ScreenDisplayTimer = 0.0f;
-  	    AudioSceneFading.ScreenFadeStatus = AudioSceneFading.FadeOut;
+        AudioSceneFading.ScreenDisplayTimer = 0.0f;
+        AudioSceneFading.ScreenFadeStatus = AudioSceneFading.FadeOut;
+        waitCoroutine = null;
     }
 
     void Update()
@@ -40,7 +51,7 @@ public class Continue : MonoBehaviour
             }
         }
 
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             AudioSceneFading.ScreenFadeStatus = AudioSceneFading.FadeOut;
             AudioSceneFading.PlaySoundEffect(0, 0);

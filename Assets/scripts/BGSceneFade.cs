@@ -4,10 +4,19 @@ using UnityEngine.SceneManagement;
 public class BGSceneFade : MonoBehaviour
 {
     private SpriteRenderer spriteRenderer;
+    private const float FadeSpeed = 0.5f;
+    private const string SceneUnityName = "SCN_Unity";
+    private const string SceneTitleName = "SCN_Title";
 
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+        {
+            Debug.LogError("BGSceneFade: Missing SpriteRenderer on the same GameObject.");
+            enabled = false;
+            return;
+        }
 
         AudioSceneFading.ScreenFadeStatus = AudioSceneFading.FadeIn;
         AudioSceneFading.ScreenFadeAlpha = 1.0f;
@@ -21,7 +30,7 @@ public class BGSceneFade : MonoBehaviour
     {
         if (AudioSceneFading.ScreenFadeStatus == AudioSceneFading.FadeIn)
         {
-            AudioSceneFading.ScreenFadeAlpha -= 0.5f * Time.deltaTime;
+            AudioSceneFading.ScreenFadeAlpha -= FadeSpeed * Time.deltaTime;
 
             Color tmpColor = spriteRenderer.color;
             tmpColor.a = AudioSceneFading.ScreenFadeAlpha;
@@ -33,10 +42,9 @@ public class BGSceneFade : MonoBehaviour
                 AudioSceneFading.ScreenFadeStatus = AudioSceneFading.FadeNone;
             }
         }
-
-        if (AudioSceneFading.ScreenFadeStatus == AudioSceneFading.FadeOut)
+        else if (AudioSceneFading.ScreenFadeStatus == AudioSceneFading.FadeOut)
         {
-            AudioSceneFading.ScreenFadeAlpha += 0.5f * Time.deltaTime;
+            AudioSceneFading.ScreenFadeAlpha += FadeSpeed * Time.deltaTime;
 
             Color tmpColorTwo = spriteRenderer.color;
             tmpColorTwo.a = AudioSceneFading.ScreenFadeAlpha;
@@ -52,7 +60,7 @@ public class BGSceneFade : MonoBehaviour
                     AudioSceneFading.PlayMusic(0, -1);
                     AudioSceneFading.CurrentSceneToDisplay = AudioSceneFading.SceneUnity;
                     AudioSceneFading.NextSceneToDisplay = AudioSceneFading.SceneTitle;
-                    SceneManager.LoadScene("SCN_Unity");
+                    SceneManager.LoadScene(SceneUnityName);
                     return;
                 }
 
@@ -60,10 +68,11 @@ public class BGSceneFade : MonoBehaviour
                 {
                     AudioSceneFading.CurrentSceneToDisplay = AudioSceneFading.SceneTitle;
                     AudioSceneFading.PlaySoundEffect(1, 0);
-                    SceneManager.LoadScene("SCN_Title");
+                    SceneManager.LoadScene(SceneTitleName);
                     return;
                 }
             }
         }
     }
 }
+
