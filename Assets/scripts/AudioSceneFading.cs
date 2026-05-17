@@ -64,6 +64,7 @@ public class AudioSceneFading : MonoBehaviour
         MusicCurrentlyPlaying = musicToPlay;
         Instance.musicAudioSource.clip = Instance.musicClips[musicToPlay];
         Instance.musicAudioSource.loop = (loop == -1);
+        Instance.musicAudioSource.volume = MusicVolume;
         Instance.musicAudioSource.Play();
     }
 
@@ -71,6 +72,8 @@ public class AudioSceneFading : MonoBehaviour
     {
         if (Instance == null) return;
         if (soundEffectToPlay < 0 || soundEffectToPlay >= Instance.sfxClips.Length) return;
+
+        Instance.sfxAudioSource.volume = EffectsVolume;
 
         if (loop == -1)
         {
@@ -80,7 +83,7 @@ public class AudioSceneFading : MonoBehaviour
         }
         else
         {
-            Instance.sfxAudioSource.PlayOneShot(Instance.sfxClips[soundEffectToPlay]);
+            Instance.sfxAudioSource.PlayOneShot(Instance.sfxClips[soundEffectToPlay], EffectsVolume);
         }
     }
 }
