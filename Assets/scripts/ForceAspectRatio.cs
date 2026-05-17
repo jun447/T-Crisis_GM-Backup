@@ -4,33 +4,40 @@ using UnityEngine.Rendering;
 public class ForceAspectRatio : MonoBehaviour
 {
     public float targetAspectRatio = 16f / 9f;
-    Camera camera;
+    [SerializeField] private Camera targetCamera;
 
-    private CommandBuffer clearBuffer;
+    private int lastScreenWidth = -1;
+    private int lastScreenHeight = -1;
+    private bool needsClear;
 
     void Start()
     {
         //Screen.SetResolution(640, 360, FullScreenMode.Windowed);
-        camera = GetComponent<Camera>();
+        if (targetCamera == null)
+        {
+            targetCamera = GetComponent<Camera>();
+        }
+        if (targetCamera == null)
+        {
+            Debug.LogError("ForceAspectRatio: Missing Camera component on the same GameObject.");
+            enabled = false;
+            return;
+        }
         SetCameraAspectRatio();
-
-        clearBuffer = new CommandBuffer();
-        clearBuffer.name = "ResizeClear";
-        // Clear params: (clearDepth, clearColor, backgroundColor)
-        clearBuffer.ClearRenderTarget(true, true, Color.black);
+        lastScreenWidth = Screen.width;
+        lastScreenHeight = Screen.height;
+        needsClear = true;
     }
 
     void Update()
     {
-        SetCameraAspectRatio();
-    }
-
-    void OnPreRender()
-    {
-        // optional: Check if window resized this frame
-        // and only if so execute the clear immediately before cameras draw
-        // to avoid any performance impact during normal operations
-        Graphics.ExecuteCommandBuffer(clearBuffer);
+        if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
+        {
+            SetCameraAspectRatio();
+            lastScreenWidth = Screen.width;
+            lastScreenHeight = Screen.height;
+            needsClear = true;
+        }
     }
 
     void SetCameraAspectRatio()
@@ -38,7 +45,7 @@ public class ForceAspectRatio : MonoBehaviour
         float windowAspect = (float)Screen.width / (float)Screen.height;
         float scaleHeight = windowAspect / targetAspectRatio;
 
-        Rect rect = camera.rect;
+        Rect rect = targetCamera.rect;
 
         if (scaleHeight < 1.0f)
         {
@@ -58,8 +65,27 @@ public class ForceAspectRatio : MonoBehaviour
             rect.y = 0;
         }
 
-        GL.Clear(true, true, Color.black); // Necessary to clear window on window resize on Linux Wayland
+        targetCamera.rect = rect;
+    }
 
-        camera.rect = rect;
+    void OnEnable()
+    {
+        RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+    }
+
+    void OnDisable()
+    {
+        RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+    }
+
+    private void OnBeginCameraRendering(ScriptableRenderContext context, Camera cam)
+    {
+        if (!needsClear || cam != targetCamera)
+        {
+            return;
+        }
+
+        GL.Clear(true, true, Color.black); // Necessary to clear window on window resize on Linux Wayland
+        needsClear = false;
     }
 }   
