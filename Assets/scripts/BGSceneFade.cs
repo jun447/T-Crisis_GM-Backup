@@ -3,17 +3,16 @@ using UnityEngine.SceneManagement;
 
 public class BGSceneFade : MonoBehaviour
 {
-    private SpriteRenderer spriteRenderer;
+    public CanvasGroup canvasGroup;
     private const float FadeSpeed = 0.5f;
     private const string SceneUnityName = "SCN_Unity";
     private const string SceneTitleName = "SCN_Title";
 
     void Start()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer == null)
+        if (canvasGroup == null)
         {
-            Debug.LogError("BGSceneFade: Missing SpriteRenderer on the same GameObject.");
+            Debug.LogError("BGSceneFade: Missing CanvasGroup assignment in the Inspector.");
             enabled = false;
             return;
         }
@@ -21,9 +20,7 @@ public class BGSceneFade : MonoBehaviour
         AudioSceneFading.ScreenFadeStatus = AudioSceneFading.FadeIn;
         AudioSceneFading.ScreenFadeAlpha = 1.0f;
 
-        Color tmpColor = spriteRenderer.color;
-        tmpColor.a = AudioSceneFading.ScreenFadeAlpha;
-        spriteRenderer.color = tmpColor;
+        canvasGroup.alpha = AudioSceneFading.ScreenFadeAlpha;
     }
 
     void Update()
@@ -32,9 +29,7 @@ public class BGSceneFade : MonoBehaviour
         {
             AudioSceneFading.ScreenFadeAlpha -= FadeSpeed * Time.deltaTime;
 
-            Color tmpColor = spriteRenderer.color;
-            tmpColor.a = AudioSceneFading.ScreenFadeAlpha;
-            spriteRenderer.color = tmpColor;
+            canvasGroup.alpha = AudioSceneFading.ScreenFadeAlpha;
 
             if (AudioSceneFading.ScreenFadeAlpha <= 0.0f)
             {
@@ -46,9 +41,7 @@ public class BGSceneFade : MonoBehaviour
         {
             AudioSceneFading.ScreenFadeAlpha += FadeSpeed * Time.deltaTime;
 
-            Color tmpColorTwo = spriteRenderer.color;
-            tmpColorTwo.a = AudioSceneFading.ScreenFadeAlpha;
-            spriteRenderer.color = tmpColorTwo;
+            canvasGroup.alpha = AudioSceneFading.ScreenFadeAlpha;
 
             if (AudioSceneFading.ScreenFadeAlpha >= 1.0f)
             {
@@ -75,4 +68,3 @@ public class BGSceneFade : MonoBehaviour
         }
     }
 }
-
